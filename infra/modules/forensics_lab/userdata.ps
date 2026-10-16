@@ -1,0 +1,92 @@
+<powershell>
+
+# Set up logging
+Start-Transcript -Path "C:\Windows\Temp\userdata-install.log" -Append
+
+Write-Host "Starting installation of forensics tools..."
+
+# Create temp directory for downloads
+$tempDir = "C:\Windows\Temp\ForensicsInstall"
+New-Item -ItemType Directory -Force -Path $tempDir | Out-Null
+
+# Create Forensics directory
+New-Item -ItemType Directory -Force -Path "C:\Forensics" | Out-Null
+
+# Install 3rd party tools
+try {
+    # Install AWS CLI
+    Write-Host "Downloading AWS CLI..."
+    $awsCliUrl = "https://awscli.amazonaws.com/AWSCLIV2.msi"
+    $awsCliInstaller = "$tempDir\AWSCLIV2.msi"
+    Invoke-WebRequest -Uri $awsCliUrl -OutFile $awsCliInstaller -UseBasicParsing
+
+    Write-Host "Installing AWS CLI..."
+    Start-Process msiexec.exe -ArgumentList "/i `"$awsCliInstaller`" /qn /norestart" -Wait -NoNewWindow
+    Write-Host "AWS CLI installation completed."
+
+    # Install Chocolatey package manager
+    Write-Host "Installing Chocolatey..."
+    [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
+    Invoke-Expression ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+    Write-Host "Chocolatey installation completed."
+
+    # Install WSL
+    Write-Host "Installing WSL with Ubuntu..."
+    wsl --install -d Ubuntu
+    Write-Host "WSL installation completed. A reboot will be required for WSL to be fully functional."
+
+    # Install Python3 (latest version)
+    Write-Host "Installing latest version of Python3..."
+    choco install python -y
+    Write-Host "Python3 installation completed."
+
+    # Install forensics tools via Chocolatey
+    Write-Host "Installing forensics tools..."
+
+    Write-Host "Installing Autopsy..."
+    choco install autopsy -y
+
+    Write-Host "Installing Eric Zimmerman Tools..."
+    choco install ericzimmermantools -y
+
+    Write-Host "Installing Arsenal Image Mounter..."
+    choco install arsenalimagemounter -y
+
+    Write-Host "Installing X-Ways Forensics Imager..."
+    choco install xwfim -y
+
+    Write-Host "Installing Sleuth Kit..."
+    choco install sleuthkit -y
+
+    Write-Host "Installing RegRipper..."
+    choco install regripper -y
+
+    Write-Host "Installing Bulk Extractor..."
+    choco install bulk-extractor -y
+
+    Write-Host "Installing Cyberduck..."
+    choco install cyberduck -y
+
+    Write-Host "Installing TruffleHog..."
+    choco install truffleHog -y
+
+    Write-Host "All forensics tools installation completed."
+
+    Write-Host "All installations completed successfully."
+
+} catch {
+    Write-Host "Error during installation: $_"
+    exit 1
+} finally {
+    # Cleanup downloaded files
+    Write-Host "Cleaning up installation files..."
+    Remove-Item -Path $tempDir -Recurse -Force -ErrorAction SilentlyContinue
+}
+
+Stop-Transcript
+
+# Reboot to complete WSL installation
+Write-Host "Rebooting system to complete WSL installation..."
+Restart-Computer -Force
+
+</powershell>
